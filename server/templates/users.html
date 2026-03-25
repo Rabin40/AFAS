@@ -1,0 +1,45 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<h2>Users</h2>
+
+<div class="muted">
+  Filter:
+  <a href="/users">All</a> |
+  <a href="/users?role=student">Students</a> |
+  <a href="/users?role=teacher">Teachers</a> |
+  <a href="/users?role=admin">Admins</a>
+</div>
+
+<table>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Role</th>
+      <th>Identifier</th>
+      <th>Email</th>
+      <th>Active</th>
+      {% if role == "admin" %}<th>Action</th>{% endif %}
+    </tr>
+  </thead>
+  <tbody>
+    {% for u in users %}
+      <tr>
+        <td>{{ u.name }}</td>
+        <td>{{ u.role }}</td>
+        <td>{{ u.identifier() }}</td>
+        <td>{{ u.email }}</td>
+        <td>{{ "Yes" if u.is_active else "No" }}</td>
+        {% if role == "admin" %}
+          <td>
+            <form method="POST" action="/users/{{ u.id }}/toggle">
+              <button type="submit">{{ "Disable" if u.is_active else "Enable" }}</button>
+            </form>
+          </td>
+        {% endif %}
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

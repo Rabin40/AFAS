@@ -1,0 +1,7 @@
+flask
+flask_sqlalchemy
+numpy
+opencv-python
+deepface
+tf-keras
+waitress

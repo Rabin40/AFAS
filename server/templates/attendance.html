@@ -1,0 +1,107 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="topbar">
+    <h2>Attendance Management</h2>
+    <div class="profile">Hello {{ display_name }}</div>
+</div>
+
+<!-- USER TABLE -->
+<div class="section">
+    <div class="section-header">
+        <h3>User Attendance</h3>
+    </div>
+
+    <div class="attendance-toolbar">
+        <form method="GET" action="/attendance" class="attendance-filter-form">
+            <div class="attendance-control attendance-date-control">
+                <label for="attendance-day">Date</label>
+                <input id="attendance-day" type="date" name="day" value="{{ day }}">
+            </div>
+            <button type="submit" class="attendance-filter-btn">Apply</button>
+        </form>
+
+        <div class="attendance-toolbar-actions">
+            <div class="attendance-control attendance-search-control">
+                <label for="attendance-search">Search</label>
+                <input type="text" id="attendance-search" placeholder="Search by name, role, email...">
+            </div>
+
+            <a
+                class="export-btn attendance-export-btn"
+                href="/attendance.csv?day={{ day }}"
+                aria-label="Export attendance as CSV"
+                title="Export CSV"
+            >
+                <span class="export-btn-label">Export CSV</span>
+                <span class="export-btn-icon" aria-hidden="true">&#8681;</span>
+            </a>
+        </div>
+    </div>
+
+    <table class="styled-table user-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Identifier</th>
+                <th>Email</th>
+                <th>Score</th>
+                <th>Timestamp</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for log, user in rows %}
+            <tr>
+                <td>{{ user.name }}</td>
+                <td>{{ user.role }}</td>
+                <td>{{ user.identifier() }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ "%.3f"|format(log.score) }}</td>
+                <td>{{ log.timestamp }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="pagination">
+        <span>Showing page {{ page }} of {{ total_pages }} | {{ total_rows }} records</span>
+        {% if total_pages > 1 %}
+        <div class="pagination-links">
+            {% if page > 1 %}
+            <a href="{{ url_for('attendance', day=day, page=page - 1) }}">Previous</a>
+            {% endif %}
+
+            {% for page_number in range(1, total_pages + 1) %}
+            <a
+                href="{{ url_for('attendance', day=day, page=page_number) }}"
+                class="{% if page_number == page %}active{% endif %}"
+            >
+                {{ page_number }}
+            </a>
+            {% endfor %}
+
+            {% if page < total_pages %}
+            <a href="{{ url_for('attendance', day=day, page=page + 1) }}">Next</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function filterAttendance() {
+    const searchQuery = document.getElementById('attendance-search').value.toLowerCase();
+    const rows = document.querySelectorAll('.user-table tbody tr');
+
+    rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(searchQuery) ? '' : 'none';
+    });
+}
+
+document.getElementById('attendance-search').addEventListener('input', filterAttendance);
+</script>
+
+{% endblock %}

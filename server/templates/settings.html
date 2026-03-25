@@ -1,0 +1,73 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="topbar">
+    <h2>Account Settings</h2>
+    <div class="profile">Hello {{ display_name }}</div>
+</div>
+
+<div class="settings-container">
+
+    <!-- Profile Information -->
+    <div class="settings-card">
+        <h3>Profile Information</h3>
+
+        <div class="settings-grid">
+            <div class="info-box">
+                <label>Username</label>
+                <p>{{ user.username }}</p>
+            </div>
+
+            <div class="info-box">
+                <label>Role</label>
+                <p>{{ user.role }}</p>
+            </div>
+
+            <div class="info-box">
+                <label>Status</label>
+                <p>{% if user.is_active %}Active{% else %}Inactive{% endif %}</p>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Password Change -->
+    <div class="settings-card">
+        <h3>Change Password</h3>
+
+        {% if error %}
+        <div class="alert error">{{ error }}</div>
+        {% endif %}
+
+        {% if success %}
+        <div class="alert success">{{ success }}</div>
+        {% endif %}
+
+        <form method="POST" class="password-form">
+
+            <div class="form-row">
+                <div>
+                    <label>Current Password</label>
+                    <input type="password" name="current_password" required>
+                </div>
+
+                <div>
+                    <label>New Password</label>
+                    <input type="password" name="new_password" required>
+                </div>
+
+                <div>
+                    <label>Confirm New Password</label>
+                    <input type="password" name="confirm_password" required>
+                </div>
+            </div>
+
+            <button class="btn-primary">Update Password</button>
+
+        </form>
+
+    </div>
+
+</div>
+
+{% endblock %}

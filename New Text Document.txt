@@ -1,0 +1,50 @@
+1) BACKEND SERVER (Flask)
+
+
+Go to server folder
+cd AFAS/server
+
+(Optional) Create virtual environment
+python -m venv .venv
+
+Activate virtual environment (PowerShell)
+.\.venv\Scripts\activate
+
+Install dependencies
+pip install -r requirements.txt
+
+Run backend
+py app.py
+Server runs at: http://127.0.0.1:5001
+
+
+
+2) DESKTOP APPLICATION (Tkinter)
+
+Open a NEW terminal window
+cd AFAS/desktop
+
+Activate same virtual environment (if shared)
+.\.venv\Scripts\activate
+
+Install dependencies (if needed)
+pip install -r requirements.txt
+
+Run desktop GUI
+py main.py
+
+
+
+3) WORKFLOW
+
+
+ a) With backend running, start main.py
+ b) Go to "Register Face" screen
+    - Enter: Full Name, Sex, Email, Student ID
+    - Click: "Start Registration"
+    - Look straight at camera
+    - Click: "Capture Face"
+
+ c) Go to "Attendance Scanner"
+    - Look straight at camera
+    - Wait for result on screen

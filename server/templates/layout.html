@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AFAS Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/afas.css') }}">
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <div class="sidebar-header">
+        <h1>AFAS</h1>
+        <button
+            id="toggle-sidebar"
+            class="sidebar-toggle"
+            type="button"
+            aria-label="Collapse sidebar"
+            aria-expanded="true"
+        >
+            &#9776;
+        </button>
+    </div>
+
+    <a href="/dashboard" class="{% if active=='dashboard' %}active{% endif %}">
+        <span class="nav-icon" aria-hidden="true">&#127968;</span>
+        <span class="nav-label">Dashboard</span>
+    </a>
+    <a href="{{ portal_url('users') }}" class="{% if active=='users' %}active{% endif %}">
+        <span class="nav-icon" aria-hidden="true">&#128101;</span>
+        <span class="nav-label">User Management</span>
+    </a>
+    <a href="/attendance" class="{% if active=='attendance' %}active{% endif %}">
+        <span class="nav-icon" aria-hidden="true">&#128197;</span>
+        <span class="nav-label">Attendance View</span>
+    </a>
+    <a href="{{ portal_url('reports') }}" class="{% if active=='reports' %}active{% endif %}">
+        <span class="nav-icon" aria-hidden="true">&#128202;</span>
+        <span class="nav-label">Reports & Analytics</span>
+    </a>
+    <a href="{{ portal_url('settings') }}" class="{% if active=='settings' %}active{% endif %}">
+        <span class="nav-icon" aria-hidden="true">&#9881;</span>
+        <span class="nav-label">Settings</span>
+    </a>
+    <a href="/logout">
+        <span class="nav-icon" aria-hidden="true">&#10162;</span>
+        <span class="nav-label">Logout</span>
+    </a>
+</div>
+
+<!-- MAIN CONTENT -->
+<div class="main-content">
+    {% block content %}{% endblock %}
+</div>
+
+<script>
+    window.history.pushState(null, "", window.location.href);
+    window.onpopstate = function () {
+        window.history.pushState(null, "", window.location.href);
+    };
+</script>
+
+{% if session.get("portal_user_id") %}
+<script>
+    window.history.pushState(null, "", window.location.href);
+    window.onpopstate = function () {
+        window.history.pushState(null, "", window.location.href);
+    };
+</script>
+{% endif %}
+
+<script>
+    const sidebar = document.querySelector('.sidebar');
+    const toggleButton = document.getElementById('toggle-sidebar');
+    const collapsedClass = 'minimized';
+    const storageKey = 'afasSidebarCollapsed';
+
+    function updateSidebarState(isCollapsed) {
+        sidebar.classList.toggle(collapsedClass, isCollapsed);
+        toggleButton.setAttribute('aria-expanded', String(!isCollapsed));
+        toggleButton.setAttribute('aria-label', isCollapsed ? 'Expand sidebar' : 'Collapse sidebar');
+    }
+
+    updateSidebarState(localStorage.getItem(storageKey) === 'true');
+
+    toggleButton.addEventListener('click', function () {
+        const isCollapsed = !sidebar.classList.contains(collapsedClass);
+        updateSidebarState(isCollapsed);
+        localStorage.setItem(storageKey, String(isCollapsed));
+    });
+</script>
+
+</body>
+</html>

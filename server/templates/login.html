@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>AFAS Login</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/afas.css') }}">
+</head>
+<body class="login-page">
+
+<div class="login-shell">
+    <div class="login-container">
+        <div class="left-panel">
+            <span class="login-eyebrow">Secure portal</span>
+            <h1>AFAS</h1>
+            <p>Automatic Face Attendance System for streamlined attendance, reporting, and account management.</p>
+        </div>
+
+        <div class="right-panel">
+            <div class="login-header">
+                <h2>Login to your account</h2>
+                <p>Use your portal username and password to continue.</p>
+            </div>
+
+            {% if success %}
+                <div class="success">{{ success }}</div>
+            {% endif %}
+
+            {% if error %}
+                <div class="error">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" class="login-form">
+                <label for="username">Username</label>
+                <input id="username" name="username" placeholder="Enter your username" required>
+
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password" placeholder="Enter your password" required>
+
+                <div class="forgot">
+                    <a href="{{ url_for('forgot_password') }}">Forgot password?</a>
+                </div>
+
+                <button type="submit" class="login-submit-btn">Login now</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

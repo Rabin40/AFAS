@@ -1,0 +1,166 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="topbar">
+    <h2>Reports & Analytics</h2>
+    <div class="profile">Hello {{ display_name }}</div>
+</div>
+
+<div class="card-grid">
+    <div class="card">
+        <h3>Total Present Today</h3>
+        <p>{{ total_present }}%</p>
+    </div>
+
+    <div class="card">
+        <h3>Total Absent Today</h3>
+        <p>{{ total_absent }}%</p>
+    </div>
+
+    <div class="card">
+        <h3>Average Department Present</h3>
+        <p>{{ avg_department_present }}%</p>
+    </div>
+</div>
+
+<div class="charts-container">
+    <div class="chart-box">
+        <h3>Attendance by Departments</h3>
+        <canvas id="deptChart" class="report-chart"></canvas>
+    </div>
+
+    <div class="chart-box">
+        <h3>Monthly Attendance Trends</h3>
+        <canvas id="trendChart" class="report-chart"></canvas>
+    </div>
+
+    <div class="chart-box">
+        <h3>Present vs Absent</h3>
+        <canvas id="absenceChart" class="report-chart"></canvas>
+    </div>
+
+    <div class="chart-box">
+        <h3>Attendance Time Distribution</h3>
+        <canvas id="timeChart" class="report-chart"></canvas>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script id="dept-labels-data" type="application/json">{{ dept_labels|tojson }}</script>
+<script id="dept-values-data" type="application/json">{{ dept_values|tojson }}</script>
+<script id="month-labels-data" type="application/json">{{ month_labels|tojson }}</script>
+<script id="month-values-data" type="application/json">{{ month_values|tojson }}</script>
+<script id="absence-values-data" type="application/json">{{ [total_present, total_absent]|tojson }}</script>
+<script id="time-labels-data" type="application/json">{{ time_labels|tojson }}</script>
+<script id="time-values-data" type="application/json">{{ time_values|tojson }}</script>
+
+<script>
+    const deptLabels = JSON.parse(document.getElementById('dept-labels-data').textContent);
+    const deptValues = JSON.parse(document.getElementById('dept-values-data').textContent);
+    const monthLabels = JSON.parse(document.getElementById('month-labels-data').textContent);
+    const monthValues = JSON.parse(document.getElementById('month-values-data').textContent);
+    const absenceValues = JSON.parse(document.getElementById('absence-values-data').textContent);
+    const timeLabels = JSON.parse(document.getElementById('time-labels-data').textContent);
+    const timeValues = JSON.parse(document.getElementById('time-values-data').textContent);
+
+    const deptCtx = document.getElementById('deptChart');
+    new Chart(deptCtx, {
+        type: 'bar',
+        data: {
+            labels: deptLabels,
+            datasets: [{
+                label: 'Present %',
+                data: deptValues,
+                backgroundColor: '#2563eb'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+
+    const trendCtx = document.getElementById('trendChart');
+    new Chart(trendCtx, {
+        type: 'line',
+        data: {
+            labels: monthLabels,
+            datasets: [{
+                label: 'Attendance %',
+                data: monthValues,
+                borderColor: '#1e3a8a',
+                fill: false,
+                tension: 0.3
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    max: 100
+                }
+            }
+        }
+    });
+
+    const absenceCtx = document.getElementById('absenceChart');
+    new Chart(absenceCtx, {
+        type: 'pie',
+        data: {
+            labels: ['Present', 'Absent'],
+            datasets: [{
+                data: absenceValues,
+                backgroundColor: ['#16a34a', '#dc2626'],
+                borderColor: ['#ffffff', '#ffffff'],
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                }
+            }
+        }
+    });
+
+    const timeCtx = document.getElementById('timeChart');
+    new Chart(timeCtx, {
+        type: 'bar',
+        data: {
+            labels: timeLabels,
+            datasets: [{
+                label: 'Check-ins',
+                data: timeValues,
+                backgroundColor: '#0f766e',
+                borderRadius: 6
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            },
+            plugins: {
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
+</script>
+
+{% endblock %}

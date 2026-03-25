@@ -1,0 +1,213 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="topbar">
+    <h2>User Management</h2>
+    
+    <div class="profile">Hello {{ display_name }}</div>
+</div>
+
+<div class="section">
+    <h3>Registered Users</h3>
+
+    <div class="search-container">
+        <input type="text" id="user-search" placeholder="Search users...">
+        <select id="role-filter">
+            <option value="">All Roles</option>
+            <option value="student">Student</option>
+            <option value="teacher">Teacher</option>
+        </select>
+        <select id="department-filter">
+            <option value="">All Departments</option>
+        </select>
+    </div>
+
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Role</th>
+                <th>Identifier</th>
+                <th>Department</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for user in users %}
+            <tr>
+                <td>{{ user.name }}</td>
+                <td>{{ user.role }}</td>
+                <td>{{ user.identifier() }}</td>
+                <td>{{ user.department or "" }}</td>
+                <td>{{ user.email }}</td>
+                <td>
+                    {% if user.is_active %}
+                        Active
+                    {% else %}
+                        Disabled
+                    {% endif %}
+                </td>
+                <td>
+                    {% if session.get("portal_role") == "admin" %}
+                    <form method="POST" action="/admin/users/{{ user.id }}/toggle" style="display:inline;">
+                        <button type="submit" class="user-toggle-btn">
+                            {% if user.is_active %}Disable{% else %}Enable{% endif %}
+                        </button>
+                    </form>
+
+                    <form method="POST" action="/admin/users/{{ user.id }}/delete" style="display:inline;" class="delete-user-form">
+                        <button type="button" class="delete-btn" data-delete-user="{{ user.name }}">Delete</button>
+                    </form>
+                    {% else %}
+                        <span>No access</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="pagination">
+        <span>Showing page {{ page }} of {{ total_pages }} | {{ total_rows }} users</span>
+        {% if total_pages > 1 %}
+        <div class="pagination-links">
+            {% if page > 1 %}
+            <a href="{{ portal_url('users') }}?{% if role_q %}role={{ role_q }}&{% endif %}page={{ page - 1 }}">Previous</a>
+            {% endif %}
+
+            {% for page_number in range(1, total_pages + 1) %}
+            <a
+                href="{{ portal_url('users') }}?{% if role_q %}role={{ role_q }}&{% endif %}page={{ page_number }}"
+                class="{% if page_number == page %}active{% endif %}"
+            >
+                {{ page_number }}
+            </a>
+            {% endfor %}
+
+            {% if page < total_pages %}
+            <a href="{{ portal_url('users') }}?{% if role_q %}role={{ role_q }}&{% endif %}page={{ page + 1 }}">Next</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div id="delete-modal" class="modal-overlay" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="delete-modal-title">
+        <h4 id="delete-modal-title">Delete user?</h4>
+        <p id="delete-modal-message">Are you sure you want to delete this user?</p>
+        <div class="modal-actions">
+            <button type="button" id="cancel-delete-btn" class="modal-secondary-btn">Cancel</button>
+            <button type="button" id="confirm-delete-btn" class="delete-btn">Delete</button>
+        </div>
+    </div>
+</div>
+
+<script>
+let pendingDeleteForm = null;
+
+function populateDepartmentFilter() {
+    const departmentSelect = document.getElementById('department-filter');
+    const departments = new Set();
+    
+    // Collect unique departments from table
+    const rows = document.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        if (cells.length > 3) {
+            const dept = cells[3].textContent.trim();
+            if (dept) departments.add(dept);
+        }
+    });
+    
+    // Add options
+    departments.forEach(dept => {
+        const option = document.createElement('option');
+        option.value = dept;
+        option.textContent = dept;
+        departmentSelect.appendChild(option);
+    });
+}
+
+function filterUsers() {
+    const searchQuery = document.getElementById('user-search').value.toLowerCase();
+    const roleFilter = document.getElementById('role-filter').value;
+    const deptFilter = document.getElementById('department-filter').value;
+    
+    const rows = document.querySelectorAll('tbody tr');
+    rows.forEach(row => {
+        const cells = row.querySelectorAll('td');
+        let show = true;
+        
+        // Search filter
+        if (searchQuery) {
+            const text = row.textContent.toLowerCase();
+            if (!text.includes(searchQuery)) show = false;
+        }
+        
+        // Role filter
+        if (roleFilter && cells.length > 1) {
+            const role = cells[1].textContent.trim().toLowerCase();
+            if (role !== roleFilter) show = false;
+        }
+        
+        // Department filter
+        if (deptFilter && cells.length > 3) {
+            const dept = cells[3].textContent.trim();
+            if (dept !== deptFilter) show = false;
+        }
+        
+        row.style.display = show ? '' : 'none';
+    });
+}
+
+function openDeleteModal(form, userName) {
+    pendingDeleteForm = form;
+
+    const modal = document.getElementById('delete-modal');
+    const message = document.getElementById('delete-modal-message');
+    message.textContent = `Are you sure you want to delete ${userName}?`;
+    modal.hidden = false;
+    document.body.classList.add('modal-open');
+}
+
+function closeDeleteModal() {
+    pendingDeleteForm = null;
+    document.getElementById('delete-modal').hidden = true;
+    document.body.classList.remove('modal-open');
+}
+
+// Populate department filter on load
+document.addEventListener('DOMContentLoaded', function () {
+    populateDepartmentFilter();
+
+    document.querySelectorAll('.delete-user-form .delete-btn').forEach(button => {
+        button.addEventListener('click', function () {
+            openDeleteModal(this.closest('form'), this.dataset.deleteUser || 'this user');
+        });
+    });
+
+    document.getElementById('cancel-delete-btn').addEventListener('click', closeDeleteModal);
+    document.getElementById('confirm-delete-btn').addEventListener('click', function () {
+        if (pendingDeleteForm) {
+            pendingDeleteForm.submit();
+        }
+    });
+
+    document.getElementById('delete-modal').addEventListener('click', function (event) {
+        if (event.target === this) {
+            closeDeleteModal();
+        }
+    });
+});
+
+// Add event listeners
+document.getElementById('user-search').addEventListener('input', filterUsers);
+document.getElementById('role-filter').addEventListener('change', filterUsers);
+document.getElementById('department-filter').addEventListener('change', filterUsers);
+</script>
+
+{% endblock %}

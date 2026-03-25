@@ -1,0 +1,78 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="topbar">
+    <h2>Dashboard</h2>
+    <div class="profile">Hello {{ display_name }}</div>
+</div>
+
+<!-- STAT CARDS -->
+<div class="card-grid">
+    <div class="card">
+        <h3>Total User</h3>
+        <p>{{ total_users }}</p>
+    </div>
+
+    <div class="card">
+        <h3>Total Attendance</h3>
+        <p>{{ total_attendance }}</p>
+    </div>
+
+    <div class="card">
+        <h3>Total Attendance Today</h3>
+        <p>{{ today_present }}</p>
+    </div>
+</div>
+
+<!-- ATTENDANCE LIST -->
+<div class="section">
+    <h3>Attendance List</h3>
+
+    <table class="styled-table">
+        <thead>
+            <tr>
+                <th>Name</th>
+                <th>Department</th>
+                <th>Date</th>
+                <th>Time</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for row in attendance %}
+            <tr>
+                <td>{{ row.name }}</td>
+                <td>{{ row.department }}</td>
+                <td>{{ row.date }}</td>
+                <td>{{ row.time }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <div class="pagination">
+        <span>Showing page {{ page }} of {{ total_pages }} | {{ total_attendance }} records</span>
+        {% if total_pages > 1 %}
+        <div class="pagination-links">
+            {% if page > 1 %}
+            <a href="{{ url_for('dashboard', page=page - 1) }}">Previous</a>
+            {% endif %}
+
+            {% for page_number in range(1, total_pages + 1) %}
+            <a
+                href="{{ url_for('dashboard', page=page_number) }}"
+                class="{% if page_number == page %}active{% endif %}"
+            >
+                {{ page_number }}
+            </a>
+            {% endfor %}
+
+            {% if page < total_pages %}
+            <a href="{{ url_for('dashboard', page=page + 1) }}">Next</a>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+{% endblock %}
