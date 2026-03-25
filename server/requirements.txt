@@ -1,5 +1,6 @@
-flask
-flask_sqlalchemy
+Flask
+Flask-SQLAlchemy
+python-dotenv
 numpy
 opencv-python
 deepface
