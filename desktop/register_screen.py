@@ -10,13 +10,15 @@ import cv2
 import mediapipe as mp
 from PIL import Image, ImageTk
 
-from api_client import create_user, upload_sample
+from api_client import create_user, find_user_by_face, upload_sample
 from camera_utils import frame_to_dataurl
 from ui_theme import COLORS, FONTS, PAD_X, PAD_Y, make_label
 
 PREVIEW_DELAY = 30
 REGISTRATION_IMAGE_WIDTH = 320
 REGISTRATION_JPEG_QUALITY = 68
+ENROLLMENT_VERIFY_TIMEOUT = 5.0
+ENROLLMENT_VERIFY_INTERVAL = 0.4
 FACE_CASCADE = cv2.CascadeClassifier(
     cv2.data.haarcascades + "haarcascade_frontalface_default.xml"
 )
@@ -532,6 +534,14 @@ class RegisterScreen(tk.Frame):
                     ))
                     return
                 if up.get("success"):
+                    self.worker_q.put(("info", "Finalizing face enrollment..."))
+                    verified = self.wait_for_enrollment_ready(new_id, image)
+                    if not verified:
+                        self.worker_q.put((
+                            "warn",
+                            "Registration saved, but face recognition is still warming up. "
+                            "Please wait a few seconds before scanning attendance."
+                        ))
                     if data.get("teacher_portal_setup_required"):
                         self.worker_q.put(("teacher_setup", {
                             "message": f"{self.pending_payload.get('name', 'Teacher')} registered successfully.",
@@ -545,6 +555,18 @@ class RegisterScreen(tk.Frame):
                 self.worker_q.put(("err", f"Error: {e}"))
 
         threading.Thread(target=job, daemon=True).start()
+
+    def wait_for_enrollment_ready(self, user_id, image_dataurl):
+        deadline = time.time() + ENROLLMENT_VERIFY_TIMEOUT
+        while time.time() < deadline:
+            try:
+                found = find_user_by_face(image_dataurl)
+                if found.get("found") and found.get("user_id") == user_id:
+                    return True
+            except Exception:
+                pass
+            time.sleep(ENROLLMENT_VERIFY_INTERVAL)
+        return False
 
     def process_worker_queue(self):
         try:
@@ -597,6 +619,9 @@ class RegisterScreen(tk.Frame):
                     self.freeze_instruction = False
                     self.status.config(text="Status: Error", fg=COLORS["danger"])
                     messagebox.showerror("Error", text)
+                elif msg == "warn":
+                    self.instruction.config(text=text)
+                    self.status.config(text="Status: Finalizing", fg=COLORS["warning"])
         except queue.Empty:
             pass
 
